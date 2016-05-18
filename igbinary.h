@@ -49,7 +49,7 @@ struct igbinary_memory_manager {
  * @param[in] z Variable to be serialized
  * @return 0 on success, 1 elsewhere.
  */
-IGBINARY_API int igbinary_serialize(uint8_t **ret, size_t *ret_len, zval *z TSRMLS_DC);
+IGBINARY_API int igbinary_serialize(uint8_t **ret, size_t *ret_len, zval *z);
 
 /** Serialize zval.
  * Return buffer is allocated by this function with emalloc.
@@ -59,7 +59,7 @@ IGBINARY_API int igbinary_serialize(uint8_t **ret, size_t *ret_len, zval *z TSRM
  * @param[in] memory_manager Pointer to the structure that contains memory allocation functions.
  * @return 0 on success, 1 elsewhere.
  */
-IGBINARY_API int igbinary_serialize_ex(uint8_t **ret, size_t *ret_len, zval *z, struct igbinary_memory_manager *memory_manager TSRMLS_DC);
+IGBINARY_API int igbinary_serialize_ex(uint8_t **ret, size_t *ret_len, zval *z, struct igbinary_memory_manager *memory_manager);
 
 /** Unserialize to zval.
  * @param[in] buf Buffer with serialized data.
@@ -67,6 +67,6 @@ IGBINARY_API int igbinary_serialize_ex(uint8_t **ret, size_t *ret_len, zval *z, 
  * @param[out] z Unserialized zval
  * @return 0 on success, 1 elsewhere.
  */
-IGBINARY_API int igbinary_unserialize(const uint8_t *buf, size_t buf_len, zval *z TSRMLS_DC);
+IGBINARY_API int igbinary_unserialize(const uint8_t *buf, size_t buf_len, zval *z);
 
 #endif /* IGBINARY_H */

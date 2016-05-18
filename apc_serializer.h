@@ -26,8 +26,8 @@
 #define APC_SERIALIZER_NAME(module) module##_apc_serializer
 #define APC_UNSERIALIZER_NAME(module) module##_apc_unserializer
 
-#define APC_SERIALIZER_ARGS unsigned char **buf, size_t *buf_len, const zval *value, void *config TSRMLS_DC
-#define APC_UNSERIALIZER_ARGS zval **value, unsigned char *buf, size_t buf_len, void *config TSRMLS_DC
+#define APC_SERIALIZER_ARGS unsigned char **buf, size_t *buf_len, const zval *value, void *config
+#define APC_UNSERIALIZER_ARGS zval *value, unsigned char *buf, size_t buf_len, void *config
 
 typedef int (*apc_serialize_t)(APC_SERIALIZER_ARGS);
 typedef int (*apc_unserialize_t)(APC_UNSERIALIZER_ARGS);
@@ -35,7 +35,7 @@ typedef int (*apc_unserialize_t)(APC_UNSERIALIZER_ARGS);
 typedef int (*apc_register_serializer_t)(const char* name,
                                         apc_serialize_t serialize,
                                         apc_unserialize_t unserialize,
-                                        void *config TSRMLS_DC);
+                                        void *config);
 
 /*
  * ABI version for constant hooks. Increment this any time you make any changes
@@ -55,26 +55,25 @@ typedef int (*apc_register_serializer_t)(const char* name,
 static APC_UNUSED int apc_register_serializer(const char* name,
                                     apc_serialize_t serialize,
                                     apc_unserialize_t unserialize,
-                                    void *config TSRMLS_DC)
+                                    void *config)
 {
-    zval *apc_magic_constant = NULL;
-    (void)config;
+    int retval = 0;
 
-    ALLOC_INIT_ZVAL(apc_magic_constant);
+	zend_string *lookup = zend_string_init(
+		APC_SERIALIZER_CONSTANT, sizeof(APC_SERIALIZER_CONSTANT)-1, 0);
+	zval *magic = zend_get_constant(lookup);
 
-    if (zend_get_constant(APC_SERIALIZER_CONSTANT, sizeof(APC_SERIALIZER_CONSTANT)-1, apc_magic_constant TSRMLS_CC)) {
-        if(apc_magic_constant) {
-            apc_register_serializer_t register_func = (apc_register_serializer_t)(Z_LVAL_P(apc_magic_constant));
-            if(register_func) {
-                zval_dtor(apc_magic_constant);
-                return register_func(name, serialize, unserialize, NULL TSRMLS_CC);
-           }
-       }
+    /* zend_get_constant will return 1 on success, otherwise apc_magic_constant wouldn't be touched at all */
+    if (magic) {
+        apc_register_serializer_t register_func = (apc_register_serializer_t)(Z_LVAL_P(magic));
+        if(register_func) {
+            retval = register_func(name, serialize, unserialize, NULL);
+        }
     }
 
-    zval_dtor(apc_magic_constant);
+	zend_string_release(lookup);
 
-    return 0;
+    return retval;
 }
 
 #endif
